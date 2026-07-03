@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Мои товары</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        input, button { margin: 5px; padding: 8px; }
+        ul { list-style: none; padding: 0; }
+        li { border-bottom: 1px solid #ccc; padding: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Товары</h1>
+
+    <div>
+        <input type="text" id="name" placeholder="Название">
+        <input type="number" id="price" placeholder="Цена">
+        <button onclick="addItem()">Добавить</button>
+    </div>
+
+    <ul id="itemsList"></ul>
+
+    <script>
+        const API_URL = 'https://first-fastapi-project-y0ve.onrender.com/items/';
+
+        async function loadItems() {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            const list = document.getElementById('itemsList');
+            list.innerHTML = '';
+            data.items.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.name} — ${item.price}₽ (${item.is_offer ? 'со скидкой' : 'без скидки'})`;
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Удалить';
+                deleteBtn.onclick = () => deleteItem(item.id);
+                li.appendChild(deleteBtn);
+                list.appendChild(li);
+            });
+        }
+
+        async function addItem() {
+            const name = document.getElementById('name').value;
+            const price = parseFloat(document.getElementById('price').value);
+            if (!name || isNaN(price)) return alert('Заполни поля');
+
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, price, is_offer: false })
+            });
+            loadItems();
+            document.getElementById('name').value = '';
+            document.getElementById('price').value = '';
+        }
+
+        async function deleteItem(id) {
+            if (!confirm('Удалить?')) return;
+            await fetch(`${API_URL}${id}`, { method: 'DELETE' });
+            loadItems();
+        }
+
+        loadItems();
+    </script>
+</body>
+</html>
